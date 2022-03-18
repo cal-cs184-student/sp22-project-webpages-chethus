@@ -1,7 +1,380 @@
-<html>
-	<head>
-	</head>
-	<body>
-		Project 3-1 here
-	</body>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <style>
+        body {
+            padding: 100px;
+            width: 1000px;
+            margin: auto;
+            text-align: left;
+            font-weight: 300;
+            font-family: 'Open Sans', sans-serif;
+            color: #121212;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-family: 'Source Sans Pro', sans-serif;
+        }
+    </style>
+    <title>CS 184 Mesh Editor</title>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet" />
+</head>
+
+<title>Your Name  |  CS 184</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+</head>
+<body>
+    <br/>
+    <h1 align="middle">Assignment 3: PathTracer</h1>
+    <h2 align="middle">Aaron Sun, cs184-ace</h2>
+    <h2 align="middle">Chethan Bhateja, cs184-abq</h2>
+
+    <div class="padded">
+        <h2 align="middle">Part 1: Ray Generation and Intersection</h2>
+        <p>In part 1, we worked on implementing taking rays from normalized device coordinates and converting them to camera space and world space. Using these rays in world space, we were able to use Monte Carlo integration to sample the radiance of each pixel in our image. Finally, we implemented intersection-finding algorithms with triangles and spheres in our scene.</p>
+        <p>Our ray tracing pipeline begins with rays in normalized device coordinates in image space. However, to find out how this ray interacts with our scene, we must convert this ray into world coordinates. To do this, we begin by using a change of basis transformation to map the ray to camera space. In camera space, the image plane lies at z=-1 and the center of the image lies at (0, 0, -1) while the corners have positions based on the tangent of the horizontal and vertical fields of view. We introduce a z-axis during this step, setting the z-component of the origin to (0, 0, 0) and ensuring the ray hits the image plane at z=-1. Finally, we use the provided rotation matrix to map this camera space into the world space, and also set our origin appropriately.</p>
+        <p>We were able to use this function to effectively sample the radiance of our image space using Monte Carlo integration. For each pixel in our image, we randomly sampled ns_aa rays which go through the pixel in image space, converted the ray into world space, then found the radiance in our scene attributed to that ray. We then averaged these ns_aa results to find a radiance for our given pixel.</p>
+        <p>We implemented ray intersection with both triangles and spheres. For triangle intersection, we used the Moller Trumbore Algorithm, which provides us with the t value where the ray intersects the plane, as well as corresponding barycentric coordinates for our triangle points. We can use these barycentric coordinates to test whether the ray intersects with the triangle by ensuring each coordinate is between zero and one. In addition, we implemented sphere intersection using the quadratic equation as specified in the slides.</p>
+        <p>Depicted below are some of our results:</p>
+        <div align="middle">
+            <table style="width=100%">
+                <tr>
+                    <td>
+                        <img src="images/banana.png" width="480px" />
+                        <figcaption align="middle">Rendering ../dae/keenan/banana.dae before implementing intersection.</figcaption>
+                    </td>
+                    <td>
+                        <img src="images/CBempty.png" width="480px" />
+                        <figcaption align="middle">Rendering ../dae/sky/CBempty.dae after implementing triangle intersection.</figcaption>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <img src="images/cube.png" width="480px" />
+                        <figcaption align="middle">Rendering ../dae/simple/cube.dae.</figcaption>
+                    </td>
+                    <td>
+                        <img src="images/CBspheres.png" width="480px" />
+                        <figcaption align="middle">Rendering ../dae/sky/CBspheres_lambertian.dae after implementing sphere intersection.</figcaption>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <h2 align="middle">Part 2: Bounding Volume Hierarchy</h2>
+        <p>In this part, we used a bounding volume hierarchy (BVH) in order to accelerate our rendering process. A bounding volume hierarchy splits volumes into a tree structure, so instead of checking for intersections with every object individually, we can check bounding boxes on large sets of objects instead.</p>
+        <p>To create the BVH, we use a recursive call with a list of objects which we want to store in this node (or its children). First, we set the bounding box to be as small as possible while still encompassing all the objects. Then we check if there are few enough objects to make a leaf node, in which case we do. We split along the longest axis of the bounding box, using the average of the centroids as our splitting point. Then, after dividing our set of objects into two based on this splitting point, we recurse to set the two children of our node.</p>
+        <p>We then implemented ray intersection with axis-aligned bounding boxes to efficiently check whether we need to look for an intersection with objects within this node of our BVH. For each node of the BVH, we recursively check for object intersection until we find the closest object (the intersection which gives the minimum valid t for our ray) and return the details for that intersection.</p>
+        <p>Displayed below are a few renders for files, which are sped up immensely by using a BVH. For some of these, not using the BVH would not be feasible as it would render for too long (as a result of the sheer number of objects present).</p>
+        <div align="middle">
+            <table style="width=100%">
+                <tr>
+                    <td>
+                        <img src="images/p2/beetle.png" align="middle" width="480px" />
+                        <figcaption align="middle">Rendering beetle.dae with BVH acceleration. </figcaption>
+                    </td>
+                    <td>
+                        <img src="images/p2/CBlucy.png" align="middle" width="480px" />
+                        <figcaption align="middle">Rendering CBlucy.dae with BVH acceleration.</figcaption>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <img src="images/p2/cow.png" width="480px" />
+                        <figcaption align="middle">Rendering cow.dae with BVH acceleration.</figcaption>
+                    </td>
+                    <td>
+                        <img src="images/p2/maxplanck.png" width="480px" />
+                        <figcaption align="middle">Rendering maxplanck.dae with BVH acceleration. </figcaption>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <img src="images/p2/teapot.png" width="480px" />
+                        <figcaption align="middle">Rendering teapot.dae with BVH acceleration.</figcaption>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <p>We have also done some tests on the time speedup of a few files. We rendered the files teapot.dae, cow.dae, and beetle.dae with and without our BVH implementation speedup. We observed sped-up runtimes of 0.11s, 0.10s, and 0.09s, respectively, which we observed was vastly faster than our non-optimized code, which took 19.69s, 44.53s, and 88.96s, respectively. This has been displayed in table format below. Overall, we see that using a BVH speeds up our rendering immensely and allows us to render complex geometries which we would've been unable to run otherwise due to time constraints.</p>
+        <div align="middle">
+            <table style="width=100%" border="1">
+                <tr>
+                    <td>
+                        <p>Filename</p>
+                    </td>
+                    <td>
+                        <p>Basic Runtime (s)</p>
+                    </td>
+                    <td>
+                        <p>Accleerated Runtime (s)</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>teapot.dae</p>
+                    </td>
+                    <td>
+                        <p>19.69</p>
+                    </td>
+                    <td>
+                        <p>0.11</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>cow.dae</p>
+                    </td>
+                    <td>
+                        <p>44.53</p>
+                    </td>
+                    <td>
+                        <p>0.10</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>beetle.dae</p>
+                    </td>
+                    <td>
+                        <p>88.96</p>
+                    </td>
+                    <td>
+                        <p>0.09</p>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <h2 align="middle">Part 3: Direct Illumination</h2>
+        <p>In this section, we made our lighting scheme more complex by modeling our scene as rays of light coming from the light source and bouncing off of objects before reaching our camera. </p>
+        <p>We began by implementing the Bidirectional Scattering Distribution Function (BSDF) for diffuse objects, which reflects light equally in all directions, independent of incoming and outgoing directions. We had to include reflectance as an inherent object property and 1/PI as multiplicative constants in this BSDF. We read the <a link="http://www.joshbarczak.com/blog/?p=272">reference given on Piazza</a> when figuring out the 1/PI constant.</p>
+        <p>We then implemented zero-bounce radiance, which involved displaying rays that travel directly from the light source to our camera. One such result is shown below.</p>
+        <div align="middle">
+            <img src="images/p3/light.png" width="480px" />
+            <figcaption align="middle">Rendering CBbunny.dae with only zero-bounce illumination.</figcaption>
+        </div>
+        <p>We then implemented direct lighting (zero-bounce and one-bounce lighting) in two methods. The first method was using uniform hemisphere sampling. In both cases, we use Monte Carlo integration to estimate the definite integral which gives our object's brightness in the image. In one-bounce illumination, we take the luminance of the incoming ray to be equal to the emission of the previous object. We then multiply by the BSDF of our object and a cosine term in order to get our luminance. We sample this function many times, weighted by the inverse of the pdf for this sample and averaging our samples. </p>
+        <p>In uniform hemisphere sampling, we took the pdf of each sample to be 1/(2PI) since our hemisphere has a total of 2PI steradians. In importance sampling, we used the provided light sampling function to obtain the pdf of our sample and only sampled rays which travel from our object to a light source, then averaged over these samples. We repeated this process for every light source in the scene to get our total lighting.</p>
+        <p>Below we have shown CBbunny.dae using importance sampling for varying number of samples per light source. We observe that as we take more samples per light source, the image becomes less noisy and shadows become softer and smoother.</p>
+        <div align="middle">
+            <table style="width=100%">
+                <tr>
+                    <td>
+                        <img src="images/p3/bunny_1_1.png" align="middle" width="480px" />
+                        <figcaption align="middle">Rendering CBbunny.dae with 1 sample per light source. </figcaption>
+                    </td>
+                    <td>
+                        <img src="images/p3/bunny_1_4.png" align="middle" width="480px" />
+                        <figcaption align="middle">Rendering CBbunny.dae with 4 sample per light source. </figcaption>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <img src="images/p3/bunny_1_16.png" align="middle" width="480px" />
+                        <figcaption align="middle">Rendering CBbunny.dae with 16 sample per light source. </figcaption>
+                    </td>
+                    <td>
+                        <img src="images/p3/bunny_1_64.png" align="middle" width="480px" />
+                        <figcaption align="middle">Rendering CBbunny.dae with 64 sample per light source. </figcaption>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <p>We compare the results of importance sampling side-by-side with hemisphere sampling below. We observe that our results for the importance sampling look much less grainy and much more smooth than the uniform hemisphere sampling. We attribute this to the fact that many samples for the uniform sampling contribute nothing to the pixel's brightness since it misses the light source. As a result, the variance in our samples is much higher, making our results fluctuate more often and leaving a grainy effect.</p>
+        <div align="middle">
+            <table style="width=100%">
+                <tr>
+                    <td>
+                        <img src="images/p3/bunny_64_32.png" align="middle" width="480px" />
+                        <figcaption align="middle">Rendering CBbunny.dae using importance sampling, with 32 sample per light source and 64 samples per pixel. </figcaption>
+                    </td>
+                    <td>
+                        <img src="images/p3/bunny_h_64_32.png" align="middle" width="480px" />
+                        <figcaption align="middle">Rendering CBbunny.dae using uniform hemisphere sampling and 64 samples per pixel. </figcaption>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <p>Finally, here are some other interesting renders which we enjoyed.</p>
+        <div align="middle">
+            <table style="width=100%">
+                <tr>
+                    <td>
+                        <img src="images/p3/coil_64_32.png" align="middle" width="480px" />
+                        <figcaption align="middle">Rendering coil.dae using importance sampling, with 32 sample per light source and 64 samples per pixel. </figcaption>
+                    </td>
+                    <td>
+                        <img src="images/p3/coil_h_64_32.png" align="middle" width="480px" />
+                        <figcaption align="middle">Rendering CBbunny.dae using uniform hemisphere sampling and 64 samples per pixel. </figcaption>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <img src="images/p3/dragon_64_32.png" align="middle" width="480px" />
+                        <figcaption align="middle">Rendering dragon.dae using importance sampling, with 32 sample per light source and 64 samples per pixel. </figcaption>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <h2 align="middle">Part 4: Global Illumination</h2>
+        <p> In this section, we first implement sampling of our diffuse BSDF from incoming hemisphere directions. Then, we use this sampling to implement global illumination via recursive ray tracing.</p>
+        <p> To implement sampling of the BSDF, we call an importance sampling function that returns an incoming hemisphere direction and its corresponding pdf value. Then, we call our earlier BSDF function on the incoming and outgoing hemisphere directions to also return the proportion of light reflected in the outgoing direction. </p>
+        <p> Next, we fill in the recursive function to calculate radiance from at least one bounce. If the ray we are tracing has run out of depth, we simply return 0 radiance. Otherwise, we first calculate the base lighting at our intersection by calling one_bounce_radiance. To limit the number of additional bounces we must trace while still getting an unbiased estimate of our radiance, we use Russian Roulette with a termination probability 0.3. If we continue tracing, we use our BSDF sampling function to importance sample our indirect lighting direction and shoot a ray with decremented depth in this direction. When the BVH detects that the ray intersects something in our scene, we store the nearest such intersection and recursively call at_least_one_bounce_radiance on this ray and intersection. Afterward, we use the reflection formula from lecture to calculate how this radiance estimate affects the estimate for our current intersection. In particular, we multiply this radiance by our BSDF value and the cosine between this incoming direction and our normal to find the fraction of light that reaches our intersection. Then we normalize by our importance sampling pdf and Russian Roulette probability and accumulate the result in our radiance for the current intersection.</p>
+        <p> Finally, we complete our global radiance estimation function by adding the zero-bounce radiance to the at-least-one-bounce radiance.</p>
+        <p> By this point, we had mostly cleared up our confusions and implementation went smoothly.</p>
+        <p> As shown in the images below, global illumination results in more realistic lighting of scenes, such as diffuse lighting in shadows. </p>
+        <div align="middle">
+            <table style="width=100%">
+                <tr>
+                    <td>
+                        <img src="images/p4/spheres.png" align="middle" width="480px" />
+                        <figcaption align="middle"> Global illumination of spheres, 1024 samples/pixel. </figcaption>
+                    </td>
+                    <td>
+                        <img src="images/p4/bunny.png" align="middle" width="480px" />
+                        <figcaption align="middle"> Global illumination of bunny, 1024 samples/pixel. </figcaption>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <img src="images/p4/dragon.png" align="middle" width="480px" />
+                        <figcaption align="middle"> Global illumination of dragon, 1024 samples/pixel. </figcaption>
+                    </td>
+                    <td>
+                        <img src="images/p4/wall-e.png" align="middle" width="480px" />
+                        <figcaption align="middle"> Global illumination of WALL-E, 1024 samples/pixel. </figcaption>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <p> On the left below, we see that only direct illumination yields a bright light source, a dark ceiling, dark shadows, and sharp contrast near edges of objects. On the right, we see that indirect illumination results in a darker light source since there is no zero bounce illumination. There is also a more gentle diffuse lighting throughout the image. </p>
+        <div align="middle">
+            <table style="width=100%">
+                <tr>
+                    <td>
+                        <img src="images/p4/direct_bunny.png" align="middle" width="480px" />
+                        <figcaption align="middle"> Bunny with direct illumination only, 1024 samples/pixel. </figcaption>
+                    </td>
+                    <td>
+                        <img src="images/p4/indirect_bunny.png" align="middle" width="480px" />
+                        <figcaption align="middle"> Bunny with indirect illumination only, 1024 samples/pixel. </figcaption>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <p> For max ray depth 0 in the image below, we see that only the light source is illuminated since objects require a bounce to be illuminated. At depth 1, we see a sharp contrast in lighting with dark shadows below the rabbit. As we increase max depth, the lighting continues to become brighter and smoother until we get a very realistic-looking image at depth 100.</p>
+        <div align="middle">
+            <table style="width=100%">
+                <tr>
+                    <td>
+                        <img src="images/p4/bunny_m0.png" align="middle" width="480px" />
+                        <figcaption align="middle"> Bunny with max ray depth 0, 1024 samples/pixel. </figcaption>
+                    </td>
+                    <td>
+                        <img src="images/p4/bunny_m1.png" align="middle" width="480px" />
+                        <figcaption align="middle"> Bunny with max ray depth 1, 1024 samples/pixel. </figcaption>
+                    </td>
+                </tr>
+                    <td>
+                        <img src="images/p4/bunny_m2.png" align="middle" width="480px" />
+                        <figcaption align="middle"> Bunny with max ray depth 2, 1024 samples/pixel. </figcaption>
+                    </td>
+                    <td>
+                        <img src="images/p4/bunny_m3.png" align="middle" width="480px" />
+                        <figcaption align="middle"> Bunny with max ray depth 3, 1024 samples/pixel. </figcaption>
+                    </td>
+                <tr>
+                    <td>
+                        <img src="images/p4/bunny_m100.png" align="middle" width="480px" />
+                        <figcaption align="middle"> Bunny with max ray depth 100, 1024 samples/pixel. </figcaption>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <p> At sample rate 1 in the image below, we see dramatic speckle noise due to high variance in image samples. The speckle noise gradually fades and is dramatically less noticeable when we reach 64 samples/pixel. By 1024 samples/pixel, it is difficult to see any noise in the image and we can make out fine features of the dragon.</p>
+        <div align="middle">
+            <table style="width=100%">
+                <tr>
+                    <td>
+                        <img src="images/p4/dragon_s1.png" align="middle" width="480px" />
+                        <figcaption align="middle"> Dragon with 1 sample/pixel, 4 light rays. </figcaption>
+                    </td>
+                    <td>
+                        <img src="images/p4/dragon_s2.png" align="middle" width="480px" />
+                        <figcaption align="middle"> Dragon with 2 samples/pixel, 4 light rays. </figcaption>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <img src="images/p4/dragon_s4.png" align="middle" width="480px" />
+                        <figcaption align="middle"> Dragon with 4 samples/pixel, 4 light rays. </figcaption>
+                    </td>
+                    <td>
+                        <img src="images/p4/dragon_s8.png" align="middle" width="480px" />
+                        <figcaption align="middle"> Dragon with 8 samples/pixel, 4 light rays. </figcaption>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <img src="images/p4/dragon_s16.png" align="middle" width="480px" />
+                        <figcaption align="middle"> Dragon with 16 samples/pixel, 4 light rays. </figcaption>
+                    </td>
+                    <td>
+                        <img src="images/p4/dragon_s64.png" align="middle" width="480px" />
+                        <figcaption align="middle"> Dragon with 64 samples/pixel, 4 light rays. </figcaption>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <img src="images/p4/dragon_s256.png" align="middle" width="480px" />
+                        <figcaption align="middle"> Dragon with 256 sample/pixel, 4 light rays. </figcaption>
+                    </td>
+                    <td>
+                        <img src="images/p4/dragon_s1024.png" align="middle" width="480px" />
+                        <figcaption align="middle"> Dragon with 1024 samples/pixel, 4 light rays. </figcaption>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <h2 align="middle">Part 5: Adaptive Sampling</h2>
+        <p> In this part, we implement adaptive sampling, which prevents noise in our images by continuing to sample pixels until their values statistically converge. </p>
+        <p> To calculate the mean and variance of our pixel samples, we store two values, the sum of and sum of squares of our sample illuminances. While our pixel value has not yet converged, we avoid inefficiency from checking convergence too frequently by sampling a batch of points in our pixel within our limit of ns_aa samples. For each point, we generate a ray from the camera through the point and use our function to sample its global radiance. After updating the estimated color with this sample, we also update the sum and sum of squares with the sample illuminance. After generating the batch, we calculate the number of samples and plug this into some formulas with our saved sums to calculate our sample mean and variance. If our 95% (1.96 standard deviations) confidence interval is within our desired tolerance fraction of the mean, we decide the pixel has converged and save the number of samples for visualization. Finally, we normalize our color by the number of samples and update the pixel with its color estimate as before. </p>
+        <p> Although there were some intricate formulas in this section, we had a good grasp of the details and implementation went smoothly without any elusive bugs. </p>
+        <p> As shown below, adaptive sampling allows significant variation in sampling rates across the image, resulting in more efficient and accurate renders. Here, we see that adaptive sampling is able to better capture the form of the rabbit, the detailed scales and body of the dragon, and the complex lighting pattern on the room ceiling. </p>
+        <div align="middle">
+            <table style="width=100%">
+                <tr>
+                    <td>
+                        <img src="images/p5/bunny.png" align="middle" width="480px" />
+                        <figcaption align="middle"> Bunny with adaptive sampling, 2048 samples/pixel, 1 sample/light, max ray depth 6. </figcaption>
+                    </td>
+                    <td>
+                        <img src="images/p5/bunny_rate.png" align="middle" width="480px" />
+                        <figcaption align="middle"> Bunny sampling rate log. </figcaption>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <img src="images/p5/dragon.png" align="middle" width="480px" />
+                        <figcaption align="middle"> Dragon with adaptive sampling, 2048 samples/pixel, 1 sample/light, max ray depth 6. </figcaption>
+                    </td>
+                    <td>
+                        <img src="images/p5/dragon_rate.png" align="middle" width="480px" />
+                        <figcaption align="middle"> Dragon sampling rate log. </figcaption>
+                    </td>
+                </tr>
+               
+            </table>
+        </div>
+        <h2 align="middle">Collaboration with Partner</h2>
+        <p> We did all parts of the project together, collaborating over Zoom, code live share, and github. We felt that our styles of thinking meshed well and found that it was easier to avoid errors when we were able to discuss during implementation. </p>
+        <h2 align="middle">Website Link</h2>
+        <a href="https://cal-cs184-student.github.io/sp22-project-webpages-chethus/proj3-1/index.html">https://cal-cs184-student.github.io/sp22-project-webpages-chethus/proj3-1/index.html</a>
+    </div>
+    </body>
 </html>
