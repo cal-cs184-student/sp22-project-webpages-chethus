@@ -1,7 +1,168 @@
-<html>
-	<head>
-	</head>
-	<body>
-		Project 3-2 here
-	</body>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <style>
+        body {
+            padding: 100px;
+            width: 1000px;
+            margin: auto;
+            text-align: left;
+            font-weight: 300;
+            font-family: 'Open Sans', sans-serif;
+            color: #121212;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-family: 'Source Sans Pro', sans-serif;
+        }
+    </style>
+    <title>CS 184 Mesh Editor</title>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet" />
+</head>
+
+<title>Your Name  |  CS 184</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+</head>
+<body>
+    <br />
+    <h1 align="middle">Assignment 3: PathTracer</h1>
+    <h2 align="middle">Aaron Sun, cs184-ace</h2>
+    <h2 align="middle">Chethan Bhateja, cs184-abq</h2>
+
+    <div class="padded">
+        <h2 align="middle">Part 1: Mirror and Glass Materials</h2>
+        <p>In part 1, we implemented ray tracing for mirror and glass materials, accounting for reflection and refraction. For mirror materials, we implemented a helper reflection function that allowed us to calculate the input ray reflected by the normal vector of the surface. Since we were working in local coordinates, this was a simple transformation from (x, y, z) to (-x, -y, z). Then, we used this function to implement the BSDF sampler for mirrors by returning BSDF of 1 with pdf 1 in the direction of reflection. We had to include a 1/cosine term to cancel with the Lambertian falloff term in our other function. </p>
+        <p>We then implemented refraction, which describes the path light takes when entering and exiting media of differing indices of refraction. Using Snell's law, we were able to calculate our incoming ray as a function of our outgoing ray and eta, which we set as the index of refraction or 1/(index of refraction) depending on whether we were exiting or entering media into/from air, respectively. This allowed us to create refractive surfaces. We set the BSDF according to the transmittance of the material and scaled by 1/(cosine * eta^2) to correct other factors. In addition, we accounted for total internal reflection by returning zero transmittance when this occurred.</p>
+        <p>Finally, we combined these two properties to simulate glass material. The outgoing ray can be a result of either refraction or reflection unless the angle experiences total internal reflection. In the case of total internal reflection, we return the same output as we did in the case of a perfect mirror since there is no refraction. To estimate the ratio of reflection and refraction energy given in the Fresnel equations, we used Schlick's approximation, which probabilistically assigns each ray to reflection or refraction based on Schlick's reflection coefficient R. Then we scale our output by R or 1-R based on which outcome probability we found and set pdf = R or 1-R. We returned reflection with probability R and refraction with probability 1-R.</p>
+        <p>Depicted below are some of our results. For each image, we used 1024 samples/pixel and 4 samples/light.</p>
+        <div align="middle">
+            <table style="width=100%">
+                <tr>
+                    <td>
+                        <img src="images/spheres_1024_4_0.png" width="480px" />
+                        <figcaption align="middle">CBspheres.dae with max_ray_depth=0.</figcaption>
+                    </td>
+                    <td>
+                        <img src="images/spheres_1024_4_1.png" width="480px" />
+                        <figcaption align="middle">CBspheres.dae with max_ray_depth=1.</figcaption>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <img src="images/spheres_1024_4_2.png" width="480px" />
+                        <figcaption align="middle">CBspheres.dae with max_ray_depth=2.</figcaption>
+                    </td>
+                    <td>
+                        <img src="images/spheres_1024_4_3.png" width="480px" />
+                        <figcaption align="middle">CBspheres.dae with max_ray_depth=3.</figcaption>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <img src="images/spheres_1024_4_4.png" width="480px" />
+                        <figcaption align="middle">CBspheres.dae with max_ray_depth=4.</figcaption>
+                    </td>
+                    <td>
+                        <img src="images/spheres_1024_4_5.png" width="480px" />
+                        <figcaption align="middle">CBspheres.dae with max_ray_depth=5.</figcaption>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <img src="images/spheres_1024_4_100.png" width="480px" />
+                        <figcaption align="middle">CBspheres.dae with max_ray_depth=100.</figcaption>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <p>At zero bounces, we see only the light source since the only rays which are nonzero after zero bounces are the ones from the light source.</p>
+        <p>At one bounce, we can see the reflection of only the light source by tracing a ray from the camera to the sphere to the light source. We see no other reflections because rays that reflect elsewhere from the sphere cease to be traced since we hit our max_ray_depth.</p>
+        <p>By two bounces, the reflection of the room from light that bounced off the room and then off the shiny sphere is visible. This effect is also present in the glass sphere, but since we only enable these rays probabilistically, the sphere is relatively dark. Meanwhile, refractive rays are still not readily apparent because rays must bounce twice to go through the sphere via refraction.</p>
+        <p>By three bounces, we finally see the light that has bounced off the walls of the room and then taken two bounces to refract through the sphere, as well as the light that refracts through the sphere into its shadow.</p>
+        <p>At four bounces, the refraction through the glass sphere is finally displayed on the surface of the shiny sphere and we also see the afterimage of the refracted light in the glass sphere's shadow on the wall.</p>
+        <p></p>Moving up to 5 bounces and 100 bounces, shadows become slightly softer, making the lighting in the image more smooth.</p>
+        <h2 align="middle">Part 2: Microfacet Material</h2>
+        <p>In this part, we implemented the Microfacet model for isotropic reflections, allowing us to model lighting for a variety of rough conductors. We first implemented the Microfacet BSDF for conductors, which can be broken down into three terms in the numerator: the Fresnel reflection term F, the self-shadowing term G, and the distribution of normals D. Then we implemented importance sampling for this BSDF to reduce variance during ray tracing.</p>
+        <p>The Fresnel reflection term depends on &eta; and k, which together capture the refractive index of a conductor. However, these parameters are themselves dependent on the wavelength of incoming light. To resolve this, we assumed that the spectrum was constant for the Red, Green, and Blue color channels and defined &eta; and k as 3D vectors. Using these parameters, we wrote two formulas for the contributions of s (perpendicular) and p (parallel) light polarizations to reflection and averaged these two terms to compute the Fresnel term.</p>
+        <p>The normal distribution function D attempts to model the distribution of the microfacets' normals. Since we assume that reflections are specular, rays only reflect from the incident angle to the outgoing angle when the normal at the bounce point is exactly in the direction of the half vector. Then the contribution of surface normals is described by the density D(h). For D, we assume a Beckmann distribution which depends on the angle between the half vector and normal vector, and the parameter &alpha; which describes the bumpiness of the surface and how diffuse the reflection will be.</p>
+        <p>After multiplying the three terms in the numerator, we account for projections onto the normal vector by dividing by the z coordinates of the direction unit vectors in the object frame, yielding the final BSDF function.</p>
+        <p> To importance sample this BSDF, we recognize that the Beckmann NDF D(h) is the dominant term of the BSDF. Therefore, we first generate two uniform random numbers and transform them into spherical coordinates for h using the derived inversion formulas. Using our sampled h, we then reflect the given outgoing ray to get our sampled incident ray. Finally, we use the pdfs of the spherical coordinates &Phi; and &theta; to calculate the pdf of h and use this pdf to calculate the pdf with respect to the incident solid angle.</p>
+
+        <p>Shown below are our renderings of the gold dragon for various &alpha; values. We use 1024 samples/pixel and 4 samples/light, and ray depth 5.</p>
+
+        <div align="middle">
+            <table style="width=100%">
+                <tr>
+                    <td>
+                        <img src="images/CBdragon_microfacet_au_005.png" width="480px" />
+                        <figcaption align="middle">CBdragon_microfacet_au.dae with &alpha;=.005.</figcaption>
+                    </td>
+                    <td>
+                        <img src="images/CBdragon_microfacet_au_05.png" width="480px" />
+                        <figcaption align="middle">CBdragon_microfacet_au.dae with &alpha;=.05.</figcaption>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <img src="images/CBdragon_microfacet_au_25.png" width="480px" />
+                        <figcaption align="middle">CBdragon_microfacet_au.dae with &alpha;=.25.</figcaption>
+                    </td>
+                    <td>
+                        <img src="images/CBdragon_microfacet_au_5.png" width="480px" />
+                        <figcaption align="middle">CBdragon_microfacet_au.dae with &alpha;=.5.</figcaption>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <p>At the lowest setting &alpha;=.005, we see a very glossy dragon but also see many white dot artifacts, as a very specular BSDF results in high sample variance. At &alpha;=.05, we still see a fairly specular BSDF with the shiny scales reflecting the blue wall but now the surface is more bumpy, causing the artifacts to vanish and create a smoother reflection. At &alpha;=.25, the surface of the dragon lightens to a whiter hue and by &alpha;=.5, the scales of the dragon are a gleaming white with the reflection of the blue wall barely visible.</p>
+
+        <p>Below, we render the copper bunny at ray depth 5 with much lower sample rates of 64 samples/pixel and 1 sample/light to compare the default cosine sampling with our implementation of importance sampling.</p>
+
+        <div align="middle">
+            <table style="width=100%">
+                <tr>
+                    <td>
+                        <img src="images/CBbunny_microfacet_cu_cosine.png" width="480px" />
+                        <figcaption align="middle">CBbunny_microfacet_cu_cosine.dae with cosine sampling</figcaption>
+                    </td>
+                    <td>
+                        <img src="images/CBbunny_microfacet_cu_importance.png" width="480px" />
+                        <figcaption align="middle">CBbunny_microfacet_cu_cosine.dae with importance sampling</figcaption>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <p>In the rendering generated by cosine sampling, we see white dots scattered all around the image and concentrated particularly densely around the bottom of the bunny. With importance sampling, these white dot artifacts remain in the background but importance sampling removes almost all the artifacts from the bunny itself, allowing us to see the glossy surface clearly.</p>
+
+        <p>Finally, we show renders of the bunny with two new surface materials: brass and carbon. We looked up the online values of &eta; and k for each material and each of the three color channels, finding &eta;=[0.45080, 0.52920, 0.93760] and k=[3.3806, 2.7553, 1.9274] for brass and &eta;=[2.4124, 2.4228, 2.4346] and k=[0, 0, 0] for carbon. As before, we use 1024 samples/pixel, 4 samples/light, and ray depth 5.</p>
+
+        <div align="middle">
+            <table style="width=100%">
+                <tr>
+                    <td>
+                        <img src="images/CBbunny_microfacet_brass.png" width="480px" />
+                        <figcaption align="middle">CBbunny with Brass Surface</figcaption>
+                    </td>
+                    <td>
+                        <img src="images/CBbunny_microfacet_c.png" width="480px" />
+                        <figcaption align="middle">CBbunny with Carbon Surface</figcaption>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        
+        <p>The surfaces above do seem to resemble the appearances of brass and carbon in real life.</p>
+
+        <h2 align="middle">Collaboration with Partner</h2>
+        <p> We did all parts of the project together, collaborating over Zoom, code live share, and GitHub. We felt that our styles of thinking meshed well and found that it was easier to avoid errors when we were able to discuss during implementation. </p>
+        <h2 align="middle">Website Link</h2>
+        <a href="https://cal-cs184-student.github.io/sp22-project-webpages-chethus/proj3-2/index.html">https://cal-cs184-student.github.io/sp22-project-webpages-chethus/proj3-2/index.html</a>
+    </div>
+</body>
 </html>
