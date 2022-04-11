@@ -1,0 +1,81 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <style>
+        body {
+            padding: 100px;
+            width: 1000px;
+            margin: auto;
+            text-align: left;
+            font-weight: 300;
+            font-family: 'Open Sans', sans-serif;
+            color: #121212;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-family: 'Source Sans Pro', sans-serif;
+        }
+    </style>
+    <title>CS 184 Mesh Editor</title>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet" />
+</head>
+
+<title>Proposal: Speeding Up the Ray Tracer</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+</head>
+<body>
+    <br />
+    <h1 align="middle">Proposal: Speeding Up The Ray Tracer</h1>
+    <h2 align="middle">By Aaron Sun, Chethan Bhateja, Jared Tating, Zekai Lin</h2>
+
+    <div class="padded">
+        <h2 align="middle">Problem Description</h2>
+        <p>In project 3, we implemented a basic framework to render scenes with realistic lighting using global illumination ray tracing. However, we found this method was lacking as a result of the raw computational power and time required to render single images. On the other hand, modern day media such as games and animations need to render complex and high-resolution scenes, sometimes in real time. We intend to survey the relative speedups of various algorithmic and hardware accelerations for different scenes in order to better understand how ray tracing can be improved, or for some scenes, almost impossible to speed up. We anticipate most of the difficulty of our project to originate from understanding and implementing acceleration algorithms and explaining discrepancies of speedups between various scenes, if any arise.</p>
+        <h2 align="middle">Planned Goals and Deliverables</h2>
+        <h3 align="middle">Implementations</h3>
+        <p>We first plan to deliver efficient implementations of the following purely algorithmic methods:
+        </p>
+        <p>Packet ray tracing: This improves efficiency by tracing similar rays together in packets, which are stored in a data structure, and reassembling them using a packet assembly algorithm.
+        </p>
+        <p>Multidimensional adaptive sampling: While we implemented basic adaptive sampling in project 3, this technique is extended to multidimensional sample domains to effectively terminate sampling early even on complex effects such as motion blur and depth of field.
+        </p>
+        <p>Radiance/Irradiance cache: Due to the low frequency of indirect illumination, many calculations of radiance and irradiance are redundant. We can make use of this property to only sample points sparsely and interpolate between them to generate approximate images in much lower time.
+        </p>
+        <h3 align="middle">Generated Images</h3>
+        <p>We plan to generate images similar to those in Projects 3-1 and 3-2 including the dragon, bunny, and spheres with different surface materials in the lit-up room. We believe these are sufficiently difficult to render and will be a good way to benchmark our ray tracing improvements.
+        </p>
+        <h3 align="middle">Performance Results</h3>
+        <p>To measure and compare performance, we plan to look at speedups of rendering the images compared to the naive project 3 implementations. We can look at performance improvements for each algorithm alone and potentially also for combinations of algorithms if these are convenient and effective. We can show speedup and runtime for these images in tables and graphs.</p>
+        <p>Additionally, we may add some more specific performance signals, such as hit rate for algorithms designed to improve caching performance.
+        </p>
+        <h3 align="middle">Questions</h3>
+        <p>From our analysis, we should be able to understand how much different algorithmic optimizations improve the performance of the ray tracer and how the performance of these algorithms can vary depending on the rendered scene.
+        </p>
+        <h2 align="middle">Hope to Deliver</h2>
+        <p>If time permits, we hope to deliver a GPU implementation of ray tracing using either openGL or cuda. This could take advantage of shaders or more efficient GPU parallelization features to significantly accelerate ray tracing. As with the algorithmic improvements, we would generate images similar to those in Projects 3-1 and 3-2 since these are good benchmarks of ray tracing speed. We would then add this to our graph with speedups and compare them to our algorithmic methods.</p>
+        <p>We found a webpage from CMU about Cuda rendering. Hopefully, we can learn more about Cuda rendering from the webpage and rendering some images using Cuda. </p>
+        <h2 align="middle">Schedule</h2>
+        <p>Here is our intended schedule for our project development. Most of the project implementation and coding will take place in the first two weeks, while the remaining weeks we will spend trying to understand and formalize our results.</p>
+        <ol>
+            <li>Week 1: Research and implement algorithms/methods</li>
+            <li>Week 2: Finish implementation and render scenes</li>
+            <li>Week 3: Compare speedups of methods/scenes</li>
+            <li>Week 4: Prepare for presentation</li>
+        </ol>
+        <h2 align="middle">Resources</h2>
+        <p>We plan to build upon the project 3 code which we implemented earlier in the semester for our CPU algorithmic improvements. For the GPU improvement, we may need to build an additional framework entirely which is why we thought it would be very time consuming. For computation, we all plan to use the hive to standardize rendering speeds between group members. We also have found various papers and guides that will help us implement each of the algorithms listed above:</p>
+        <ul>
+            <li><a href="https://graphics.stanford.edu/~boulos/papers/cook_gi07.pdf">https://graphics.stanford.edu/~boulos/papers/cook_gi07.pdf</a></li>
+            <li><a href="http://graphics.ucsd.edu/~henrik/papers/multidimensional_adaptive_sampling/multidimensional_adaptive_sampling.pdf">http://graphics.ucsd.edu/~henrik/papers/multidimensional_adaptive_sampling/multidimensional_adaptive_sampling.pdf</a></li>
+            <li><a href="http://www.irisa.fr/prive/kadi/SiteEquipeAsociee/Site_RTR2A/Papiers/ieee_TVCG.pdf">http://www.irisa.fr/prive/kadi/SiteEquipeAsociee/Site_RTR2A/Papiers/ieee_TVCG.pdf</a></li>
+            <li><a href="http://15418.courses.cs.cmu.edu/fall2017/article/4">http://15418.courses.cs.cmu.edu/fall2017/article/4</a></li>
+            <li><a href="https://docs.nvidia.com/cuda/pdf/CUDA_C_Programming_Guide.pdf">https://docs.nvidia.com/cuda/pdf/CUDA_C_Programming_Guide.pdf</a></li>
+        </ul>
+    </div>
+</body>
+</html>
