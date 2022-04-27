@@ -1,0 +1,58 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <style>
+        body {
+            padding: 100px;
+            width: 1000px;
+            margin: auto;
+            text-align: left;
+            font-weight: 300;
+            font-family: 'Open Sans', sans-serif;
+            color: #121212;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-family: 'Source Sans Pro', sans-serif;
+        }
+    </style>
+    <title>CS 184 Mesh Editor</title>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet" />
+</head>
+
+<title>Milestone: Speeding Up the Ray Tracer</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+</head>
+<body>
+    <br />
+    <h1 align="middle">Milestone: Speeding Up The Ray Tracer</h1>
+    <h2 align="middle">By Aaron Sun, Chethan Bhateja, Jared Tating, Zekai Lin</h2>
+    <div align="middle">
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/kE-elF4jBn4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        <p>Proposal Website: <a href="https://cal-cs184-student.github.io/sp22-project-webpages-chethus/proposal/index.html">https://cal-cs184-student.github.io/sp22-project-webpages-chethus/proposal/index.html</a></p>
+        <p>Slides: <a href="https://docs.google.com/presentation/d/15ME5n8RzVUD73Hfzom6rkXW0awVr8BDRAUNc0xcOE3s/edit?usp=sharing">https://docs.google.com/presentation/d/15ME5n8RzVUD73Hfzom6rkXW0awVr8BDRAUNc0xcOE3s/edit?usp=sharing</a></p>
+    </div>
+
+    <div class="padded">
+        <h2 align="middle">Accomplishments</h2>
+        <h3>GPU OptiX Setup</h3>
+        <p>We first set up OptiX, a ray tracing API, on the hive. Installation went smoothly but despite trying many methods of running the remote display, we were unable to get X11 forwarding working. However, we came up with the alternative approach of outputting to a file using the -f and --no-gl-interop flags. Using these, we ran OptiX and saved locally to render some images.</p>
+        <h3>GPU OptiX Integration</h3>
+        <p>Next, we needed to pass the project input files into OptiX. The project used .dae format but OptiX has a meshloader file which takes in gltf files. Fortunately, we found a collada to gltf converter online. Using this, we were able to render some project 3 scenes such as the dragon.</p>
+        <h3>Radiance Caching Paper</h3>
+        <p>We read through the radiance caching paper in detail to fully understand the advantages and implementation details. To summarize, the method first computes a hemispherical harmonic representation for BRDFs which is used when there is low enough error, such as for low-frequency glossy BRDFs. The HSH coefficients are then using in a gradient based interpolation scheme to interpolate radiance cache values and calculate radiances more eficiently. Much of the math including hemispherical harmonics, a parabolic parameterization, and gradient interpolation were quite new to us so this was challenging.</p>
+        <h3>Radiance Caching Coding</h3>
+        <p></p>We realized the mathetmical functions were far too complicated and unstable to code my hand but fortunately we found a C++ library called Boost that had the required functions. We successfully installed Boost and wrote some of the code to compute the HSH coefficient representation.</p>
+        <h2 align="middle">Reflection and Next Steps</h2>
+        <p>In terms of implementation, we are somewhat behind the ambitious plan stated in our proposal due to technical difficulties. However, we feel that we are on track to get one or two of the algorithms working and are making good progress on the GPU implementation.</p>
+        <p>For the GPU portion, we hope to integrate OptiX into the project 3 pipeline. We will need to implement reflection, refraction and intersection with circles (intersection with triangles is in OptiX already).</p>
+        <p>For the algorithms portion, we hope to continue on to the main radiance caching algorithm using gradient based interpolation. However, the math has proved quite difficult and we are considering switching to the packet based ray tracer instead.</p>
+    </div>
+
+</body>
+</html>
